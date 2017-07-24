@@ -1,6 +1,7 @@
 import asyncio
 import aiohttp
 import async_timeout
+import atexit
 import re
 import json
 from .. import exception
@@ -15,6 +16,14 @@ _pools = {
 }
 
 _timeout = 30
+
+
+def _close_pools():
+    global _pools
+    for s in _pools.values():
+        s.close()
+
+atexit.register(_close_pools)
 
 
 def _create_onetime_pool():
