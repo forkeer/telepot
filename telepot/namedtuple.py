@@ -85,9 +85,19 @@ Different treatments for incoming and outgoing namedtuples:
 - Outgoing ones need no such declarations because users are expected to put the correct object in place.
 """
 
+# Namedtuple class will reference other namedtuple classes. Due to circular
+# dependencies, it is impossible to have all class definitions ready at
+# compile time. We have to dynamically obtain class reference at runtime.
+# For example, the following function acts like a constructor for `Message`
+# so any class can reference the Message namedtuple even before the Message
+# namedtuple is defined.
+def _Message(**kwargs):
+    return getattr(sys.modules[__name__], 'Message')(**kwargs)
+
 # incoming
 User = _create_class('User', [
            'id',
+           'is_bot',
            'first_name',
            'last_name',
            'username',
@@ -115,6 +125,7 @@ Chat = _create_class('Chat', [
            _Field('photo', constructor=ChatPhoto),
            'description',
            'invite_link',
+           _Field('pinned_message', constructor=_Message),
        ])
 
 # incoming
@@ -146,6 +157,14 @@ Document = _create_class('Document', [
                'file_path',  # undocumented
            ])
 
+# incoming and outgoing
+MaskPosition = _create_class('MaskPosition', [
+                   'point',
+                   'x_shift',
+                   'y_shift',
+                   'scale',
+               ])
+
 # incoming
 Sticker = _create_class('Sticker', [
               'file_id',
@@ -153,8 +172,21 @@ Sticker = _create_class('Sticker', [
               'height',
               _Field('thumb', constructor=PhotoSize),
               'emoji',
+              'set_name',
+              _Field('mask_position', constructor=MaskPosition),
               'file_size',
           ])
+
+def StickerArray(data):
+    return [Sticker(**p) for p in data]
+
+# incoming
+StickerSet = _create_class('StickerSet', [
+                 'name',
+                 'title',
+                 'contains_masks',
+                 _Field('stickers', constructor=StickerArray),
+             ])
 
 # incoming
 Video = _create_class('Video', [
@@ -410,9 +442,11 @@ Message = _create_class('Message', [
               _Field('forward_from', constructor=User),
               _Field('forward_from_chat', constructor=Chat),
               'forward_from_message_id',
-              'forward_date',                        # get around the fact that `Message` is not yet defined
-              _Field('reply_to_message', constructor=lambda **kwargs: getattr(sys.modules[__name__], 'Message')(**kwargs)),
+              'forward_signature',
+              'forward_date',
+              _Field('reply_to_message', constructor=_Message),
               'edit_date',
+              'author_signature',
               'text',
               _Field('entities', constructor=MessageEntityArray),
               _Field('audio', constructor=Audio),
@@ -438,7 +472,7 @@ Message = _create_class('Message', [
               'channel_chat_created',
               'migrate_to_chat_id',
               'migrate_from_chat_id',
-              _Field('pinned_message', constructor=lambda **kwargs: getattr(sys.modules[__name__], 'Message')(**kwargs)),
+              _Field('pinned_message', constructor=_Message),
               _Field('invoice', constructor=Invoice),
               _Field('successful_payment', constructor=SuccessfulPayment),
           ])

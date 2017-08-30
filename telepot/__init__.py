@@ -18,7 +18,7 @@ from . import hack
 from . import exception
 
 
-__version_info__ = (12, 1)
+__version_info__ = (12, 3)
 __version__ = '.'.join(map(str, __version_info__))
 
 
@@ -470,7 +470,7 @@ class Bot(_BotBase):
         See: https://core.telegram.org/bots/api#sendphoto
 
         :param photo:
-            a string indicating a ``file_id`` on server,
+            a string indicating a ``file_id`` on server or HTTP URL of a photo from the Internet,
             a file-like object as obtained by ``open()`` or ``urlopen()``,
             or a (filename, file-like object) tuple.
             If the file-like object is obtained by ``urlopen()``, you most likely
@@ -510,18 +510,6 @@ class Bot(_BotBase):
         """
         p = _strip(locals(), more=['document'])
         return self._api_request_with_file('sendDocument', _rectify(p), 'document', document)
-
-    def sendSticker(self, chat_id, sticker,
-                    disable_notification=None,
-                    reply_to_message_id=None,
-                    reply_markup=None):
-        """
-        See: https://core.telegram.org/bots/api#sendsticker
-
-        :param sticker: Same as ``photo`` in :meth:`telepot.Bot.sendPhoto`
-        """
-        p = _strip(locals(), more=['sticker'])
-        return self._api_request_with_file('sendSticker', _rectify(p), 'sticker', sticker)
 
     def sendVideo(self, chat_id, video,
                   duration=None,
@@ -810,6 +798,63 @@ class Bot(_BotBase):
         p = _strip(locals(), more=['msg_identifier'])
         p.update(_dismantle_message_identifier(msg_identifier))
         return self._api_request('deleteMessage', _rectify(p))
+
+    def sendSticker(self, chat_id, sticker,
+                    disable_notification=None,
+                    reply_to_message_id=None,
+                    reply_markup=None):
+        """
+        See: https://core.telegram.org/bots/api#sendsticker
+
+        :param sticker: Same as ``photo`` in :meth:`telepot.Bot.sendPhoto`
+        """
+        p = _strip(locals(), more=['sticker'])
+        return self._api_request_with_file('sendSticker', _rectify(p), 'sticker', sticker)
+
+    def getStickerSet(self, name):
+        """
+        See: https://core.telegram.org/bots/api#getstickerset
+        """
+        p = _strip(locals())
+        return self._api_request('getStickerSet', _rectify(p))
+
+    def uploadStickerFile(self, user_id, png_sticker):
+        """
+        See: https://core.telegram.org/bots/api#uploadstickerfile
+        """
+        p = _strip(locals(), more=['png_sticker'])
+        return self._api_request_with_file('uploadStickerFile', _rectify(p), 'png_sticker', png_sticker)
+
+    def createNewStickerSet(self, user_id, name, title, png_sticker, emojis,
+                            contains_masks=None,
+                            mask_position=None):
+        """
+        See: https://core.telegram.org/bots/api#createnewstickerset
+        """
+        p = _strip(locals(), more=['png_sticker'])
+        return self._api_request_with_file('createNewStickerSet', _rectify(p), 'png_sticker', png_sticker)
+
+    def addStickerToSet(self, user_id, name, png_sticker, emojis,
+                        mask_position=None):
+        """
+        See: https://core.telegram.org/bots/api#addstickertoset
+        """
+        p = _strip(locals(), more=['png_sticker'])
+        return self._api_request_with_file('addStickerToSet', _rectify(p), 'png_sticker', png_sticker)
+
+    def setStickerPositionInSet(self, sticker, position):
+        """
+        See: https://core.telegram.org/bots/api#setstickerpositioninset
+        """
+        p = _strip(locals())
+        return self._api_request('setStickerPositionInSet', _rectify(p))
+
+    def deleteStickerFromSet(self, sticker):
+        """
+        See: https://core.telegram.org/bots/api#deletestickerfromset
+        """
+        p = _strip(locals())
+        return self._api_request('deleteStickerFromSet', _rectify(p))
 
     def answerInlineQuery(self, inline_query_id, results,
                           cache_time=None,

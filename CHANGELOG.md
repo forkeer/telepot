@@ -1,7 +1,30 @@
 # telepot changelog
 
+## 12.3 (2017-08-28)
+
+- Bot API 3.3
+- Added new fields to namedtuple `Chat`, `Message`, and `User`
+- Included `aiohttp.ClientResponseError` in raising `BadHTTPResponse`
+- Added package `telepot.text` to help format Markdown and HTML by applying
+  entities
+
+## 12.2 (2017-08-01)
+
+- Bot API 3.2
+- Added methods:
+    - `getStickerSet()`
+    - `uploadStickerFile()`
+    - `createNewStickerSet()`
+    - `addStickerToSet()`
+    - `setStickerPositionInSet()`
+    - `deleteStickerFromSet()`
+- Added namedtuple `StickerSet`, `MaskPosition`
+- Added new fields to `Sticker`
+- Added `cancel()` to async `MessageLoop` (no change to traditional counterpart)
+
 ## 12.1 (2017-07-04)
 
+- Bot API 3.1
 - Added methods:
     - `restrictChatMember()`
     - `promoteChatMember()`
