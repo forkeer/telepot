@@ -16,7 +16,14 @@ _pools = {
 }
 
 _timeout = 30
+_proxy = None  # (url, (username, password))
 
+def set_proxy(url, basic_auth=None):
+    global _proxy
+    if not url:
+        _proxy = None
+    else:
+        _proxy = (url, basic_auth) if basic_auth else (url,)
 
 def _close_pools():
     global _pools
@@ -24,7 +31,6 @@ def _close_pools():
         s.close()
 
 atexit.register(_close_pools)
-
 
 def _create_onetime_pool():
     return aiohttp.ClientSession(
@@ -118,14 +124,27 @@ async def _parse(response):
 async def request(req, **user_kw):
     fn, args, kwargs, timeout, cleanup = _transform(req, **user_kw)
 
+    if _proxy:
+        kwargs['proxy'] = _proxy[0]
+        if len(_proxy) > 1:
+            kwargs['proxy_auth'] = aiohttp.BasicAuth(*_proxy[1])
+
     try:
         if timeout is None:
             async with fn(*args, **kwargs) as r:
                 return await _parse(r)
         else:
-            with async_timeout.timeout(timeout):
-                async with fn(*args, **kwargs) as r:
-                    return await _parse(r)
+            try:
+                with async_timeout.timeout(timeout):
+                    async with fn(*args, **kwargs) as r:
+                        return await _parse(r)
+
+            except asyncio.TimeoutError:
+                raise exception.TelegramError('Response timeout', 504, {})
+
+    except aiohttp.ClientConnectionError:
+        raise exception.TelegramError('Connection Error', 400, {})
+
     finally:
         if cleanup:
             cleanup()  # e.g. closing one-time session

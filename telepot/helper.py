@@ -107,6 +107,7 @@ class Sender(object):
     - :meth:`.Bot.sendVideo`
     - :meth:`.Bot.sendVoice`
     - :meth:`.Bot.sendVideoNote`
+    - :meth:`.Bot.sendMediaGroup`
     - :meth:`.Bot.sendLocation`
     - :meth:`.Bot.sendVenue`
     - :meth:`.Bot.sendContact`
@@ -124,6 +125,7 @@ class Sender(object):
                        'sendVideo',
                        'sendVoice',
                        'sendVideoNote',
+                       'sendMediaGroup',
                        'sendLocation',
                        'sendVenue',
                        'sendContact',
@@ -161,6 +163,8 @@ class Administrator(object):
     - :meth:`.Bot.getChatAdministrators`
     - :meth:`.Bot.getChatMembersCount`
     - :meth:`.Bot.getChatMember`
+    - :meth:`.Bot.setChatStickerSet`
+    - :meth:`.Bot.deleteChatStickerSet`
     """
 
     def __init__(self, bot, chat_id):
@@ -179,7 +183,9 @@ class Administrator(object):
                        'getChat',
                        'getChatAdministrators',
                        'getChatMembersCount',
-                       'getChatMember',]:
+                       'getChatMember',
+                       'setChatStickerSet',
+                       'deleteChatStickerSet']:
             setattr(self, method, partial(getattr(bot, method), chat_id))
 
 
@@ -197,6 +203,8 @@ class Editor(object):
     - :meth:`.Bot.editMessageCaption`
     - :meth:`.Bot.editMessageReplyMarkup`
     - :meth:`.Bot.deleteMessage`
+    - :meth:`.Bot.editMessageLiveLocation`
+    - :meth:`.Bot.stopMessageLiveLocation`
 
     A message's identifier can be easily extracted with :func:`telepot.message_identifier`.
     """
@@ -214,7 +222,9 @@ class Editor(object):
         for method in ['editMessageText',
                        'editMessageCaption',
                        'editMessageReplyMarkup',
-                       'deleteMessage']:
+                       'deleteMessage',
+                       'editMessageLiveLocation',
+                       'stopMessageLiveLocation']:
             setattr(self, method, partial(getattr(bot, method), msg_identifier))
 
 

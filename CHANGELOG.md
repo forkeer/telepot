@@ -1,5 +1,30 @@
 # telepot changelog
 
+## 12.5 (2017-11-28)
+
+- Bot API 3.5
+- Added method `sendMediaGroup` and namedtuple `InputMediaPhoto` and
+  `InputMediaVideo`
+- Added parameter `provider_data` to method `sendInvoice`
+- Better exception handling in `telepot.aio.api` module
+
+## 12.4 (2017-10-19)
+
+- Bot API 3.4
+- Live location:
+    - Added `live_period` to method `sendLocation`, and namedtuple
+      `InlineQueryResultLocation` and `InputLocationMessageContent`
+    - Added method `editMessageLiveLocation` and `stopMessageLiveLocation`
+- Added method `setChatStickerSet` and `deleteChatStickerSet`
+- Added `sticker_set_name` and `can_set_sticker_set` to namedtuple `Chat`
+- Added `caption_entities` to namedtuple `Message`
+- Added method `editMessageLiveLocation` and `stopMessageLiveLocation` to class
+  `Editor`
+- Added method `setChatStickerSet` and `deleteChatStickerSet` to class
+  `Administrator`
+- Allowed supplying initial `offset` to `MessageLoop`
+- Allowed Bot API access through proxy
+
 ## 12.3 (2017-08-28)
 
 - Bot API 3.3

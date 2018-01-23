@@ -6,7 +6,10 @@ import traceback
 import collections
 from concurrent.futures._base import CancelledError
 from . import helper, api
-from .. import _BotBase, flavor, _find_first_key, _isstring, _dismantle_message_identifier, _strip, _rectify
+from .. import (
+    _BotBase, flavor, _find_first_key, _isstring, _strip, _rectify,
+    _dismantle_message_identifier, _split_input_media_array
+)
 
 # Patch aiohttp for sending unicode filename
 from . import hack
@@ -111,14 +114,12 @@ class Bot(_BotBase):
         See: https://core.telegram.org/bots/api#sendphoto
 
         :param photo:
-            a string indicating a ``file_id`` on server or HTTP URL of a photo from the Internet,
-            a file-like object as obtained by ``open()`` or ``urlopen()``,
-            or a (filename, file-like object) tuple.
-            If the file-like object is obtained by ``urlopen()``, you most likely
-            have to supply a filename because Telegram servers require to know
-            the file extension.
-            If the filename contains non-ASCII characters and you are using Python 2.7,
-            make sure the filename is a unicode string.
+            - string: ``file_id`` for a photo existing on Telegram servers
+            - string: HTTP URL of a photo from the Internet
+            - file-like object: obtained by ``open(path, 'rb')``
+            - tuple: (filename, file-like object). If the filename contains
+              non-ASCII characters and you are using Python 2.7, make sure the
+              filename is a unicode string.
         """
         p = _strip(locals(), more=['photo'])
         return await self._api_request_with_file('sendPhoto', _rectify(p), 'photo', photo)
@@ -201,13 +202,64 @@ class Bot(_BotBase):
         p = _strip(locals(), more=['video_note'])
         return await self._api_request_with_file('sendVideoNote', _rectify(p), 'video_note', video_note)
 
+    async def sendMediaGroup(self, chat_id, media,
+                             disable_notification=None,
+                             reply_to_message_id=None):
+        """
+        See: https://core.telegram.org/bots/api#sendmediagroup
+
+        :type media: array of `InputMedia <https://core.telegram.org/bots/api#inputmedia>`_ objects
+        :param media:
+            To indicate media locations, each InputMedia object's ``media`` field
+            should be one of these:
+
+            - string: ``file_id`` for a file existing on Telegram servers
+            - string: HTTP URL of a file from the Internet
+            - file-like object: obtained by ``open(path, 'rb')``
+            - tuple: (form-data name, file-like object)
+            - tuple: (form-data name, (filename, file-like object))
+
+            In case of uploading, you may supply customized multipart/form-data
+            names for each uploaded file (as in last 2 options above). Otherwise,
+            telepot assigns unique names to each uploaded file. Names assigned by
+            telepot will not collide with user-supplied names, if any.
+        """
+        p = _strip(locals(), more=['media'])
+        legal_media, files_to_attach = _split_input_media_array(media)
+
+        p['media'] = legal_media
+        return await self._api_request('sendMediaGroup', _rectify(p), files_to_attach)
+
     async def sendLocation(self, chat_id, latitude, longitude,
+                           live_period=None,
                            disable_notification=None,
                            reply_to_message_id=None,
                            reply_markup=None):
         """ See: https://core.telegram.org/bots/api#sendlocation """
         p = _strip(locals())
         return await self._api_request('sendLocation', _rectify(p))
+
+    async def editMessageLiveLocation(self, msg_identifier, latitude, longitude,
+                                      reply_markup=None):
+        """
+        See: https://core.telegram.org/bots/api#editmessagelivelocation
+
+        :param msg_identifier: Same as in :meth:`.Bot.editMessageText`
+        """
+        p = _strip(locals(), more=['msg_identifier'])
+        p.update(_dismantle_message_identifier(msg_identifier))
+        return await self._api_request('editMessageLiveLocation', _rectify(p))
+
+    async def stopMessageLiveLocation(self, msg_identifier,
+                                      reply_markup=None):
+        """
+        See: https://core.telegram.org/bots/api#stopmessagelivelocation
+
+        :param msg_identifier: Same as in :meth:`.Bot.editMessageText`
+        """
+        p = _strip(locals(), more=['msg_identifier'])
+        p.update(_dismantle_message_identifier(msg_identifier))
+        return await self._api_request('stopMessageLiveLocation', _rectify(p))
 
     async def sendVenue(self, chat_id, latitude, longitude, title, address,
                         foursquare_id=None,
@@ -237,6 +289,7 @@ class Bot(_BotBase):
 
     async def sendInvoice(self, chat_id, title, description, payload,
                           provider_token, start_parameter, currency, prices,
+                          provider_data=None,
                           photo_url=None,
                           photo_size=None,
                           photo_width=None,
@@ -365,6 +418,16 @@ class Bot(_BotBase):
         """ See: https://core.telegram.org/bots/api#getchatmember """
         p = _strip(locals())
         return await self._api_request('getChatMember', _rectify(p))
+
+    async def setChatStickerSet(self, chat_id, sticker_set_name):
+        """ See: https://core.telegram.org/bots/api#setchatstickerset """
+        p = _strip(locals())
+        return await self._api_request('setChatStickerSet', _rectify(p))
+
+    async def deleteChatStickerSet(self, chat_id):
+        """ See: https://core.telegram.org/bots/api#deletechatstickerset """
+        p = _strip(locals())
+        return await self._api_request('deleteChatStickerSet', _rectify(p))
 
     async def answerCallbackQuery(self, callback_query_id,
                                   text=None,
